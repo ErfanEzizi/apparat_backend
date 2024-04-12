@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define the User model
+model User {
+  id              String        @id @default(uuid())
+  username        String        @unique
+  email           String        @unique
+  password        String
+  role            UserRole      @default(CLIENT)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  clientBookings  Booking[]     @relation("ClientBookings")
+  creatorBookings Booking[]     @relation("CreatorBookings")
+}
+
+// Define the Booking model
+model Booking {
+  id              String    @id @default(uuid())
+  date            DateTime
+  location        String
+  status          String    @default("pending") // Can be "pending", "accepted", "completed", "cancelled", etc.
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  client          User      @relation("ClientBookings", fields: [clientId], references: [id])
+  clientId        String
+  creator         User      @relation("CreatorBookings", fields: [creatorId], references: [id])
+  creatorId       String
+}
+
+// Define the UserRole enum
+enum UserRole {
+  CLIENT
+  CREATOR
+}
+
