@@ -1,9 +1,9 @@
-import { Hono } from "hono";
-import { FetchEventLike } from "hono/types";
+import { Hono } from 'hono'
+import { FetchEventLike } from 'hono/types'
 
-const home = new Hono();
+const home = new Hono()
 
-home.get('/', (c) => {
+home.get('/', c => {
   return c.text('Hello Hono')
 })
 

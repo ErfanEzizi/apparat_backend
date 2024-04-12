@@ -1,31 +1,46 @@
-import { PrismaClient } from "@prisma/client";
-import { Hono } from "hono";
-import { Users } from "./types";
+import { Hono } from 'hono'
+import { createUser, deleteUser, getAllUsers } from './service'
+import { zValidator } from '@hono/zod-validator'
+import { UserSchema, UserType } from './types'
 
-const users = new Hono();
-const prisma = new PrismaClient()
+const users = new Hono()
 
-users.get('/', async (c) => {
+// Get all existing Users
+users.get('/', async c => {
+  const allUsers = await getAllUsers()
 
-  try {
-    const allUsers = await prisma.user.findMany();
-    console.log('ok')
-    return c.json(allUsers);
-  } catch (error) {
-    
-  }
+  return c.json({ users: allUsers, ok: true }, 200)
 })
 
-users.post('/', async (c) => {
-  try {
+//Create new User record
+users.post(
+  '/',
+  zValidator('json', UserSchema, (result, c) => {
+    if (!result.success) {
+      return c.json({ err: result.error, ok: false }, 400)
+    }
+  }),
+  async c => {
+    try {
+      const body = await c.req.valid('json')
+      const newUser = await createUser(body)
 
-    const body = await c.req.json();
-    const createUser = await prisma.user.create({data:body})
-    
-    return c.json({ post: createUser, ok: true }, 201)
-  } catch (error) {
-    
-    return c.json({ error: error, ok: false }, 422)
+      return c.json({ data: newUser, ok: true }, 201)
+    } catch (e) {
+      return c.json({ error: e, ok: false }, 500)
+    }
+  },
+)
+
+//Delete a selected User record with :id param
+users.delete('/:id', async c => {
+  const { id } = c.req.param()
+  try {
+    const result = await deleteUser(id)
+
+    return c.json({ deleted: result, ok: true }, 200)
+  } catch (e) {
+    return c.json({ error: e, ok: false }, 500)
   }
 })
 
