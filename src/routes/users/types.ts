@@ -14,8 +14,8 @@ export const UserSchema = z.object({
 })
 
 export interface UserType extends z.infer<typeof UserSchema> {
-  id: string
-  role: Role
+  id: string;
+  role: Role;
 }
 
 export enum Role {
