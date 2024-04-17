@@ -1,13 +1,13 @@
 import { Hono } from 'hono'
-import { createUser, deleteUser, getAllUsers } from './service'
+import { create_user, delete_user, get_all_users, update_user_record } from './service'
 import { zValidator } from '@hono/zod-validator'
-import { UserSchema, UserType } from './types'
+import { CreateUserSchema, UpdateUserSchema } from './types'
 
 const users = new Hono()
 
 // Get all existing Users
 users.get('/', async c => {
-  const allUsers = await getAllUsers()
+  const allUsers = await get_all_users()
 
   return c.json({ users: allUsers, ok: true }, 200)
 })
@@ -15,7 +15,7 @@ users.get('/', async c => {
 //Create new User record
 users.post(
   '/',
-  zValidator('json', UserSchema, (result, c) => {
+  zValidator('json', CreateUserSchema, (result, c) => {
     if (!result.success) {
       return c.json({ err: result.error, ok: false }, 400)
     }
@@ -23,7 +23,7 @@ users.post(
   async c => {
     try {
       const body = await c.req.valid('json')
-      const newUser = await createUser(body)
+      const newUser = await create_user(body)
 
       return c.json({ data: newUser, ok: true }, 201)
     } catch (e) {
@@ -36,11 +36,29 @@ users.post(
 users.delete('/:id', async c => {
   const { id } = c.req.param()
   try {
-    const result = await deleteUser(id)
+    const result = await delete_user(id)
 
     return c.json({ deleted: result, ok: true }, 200)
   } catch (e) {
     return c.json({ error: e, ok: false }, 500)
+  }
+})
+
+users.put('/:id',zValidator('json', UpdateUserSchema, (result, c) => {
+  if (!result.success) {
+    return c.json({ err: result.error, ok:false }, 400)
+  }
+}) , async c => {
+  const { id } = c.req.param()
+  console.log(id)
+  try {
+    const body = await c.req.valid('json')
+    const result = await update_user_record(id, body)
+
+    return c.json({data: result, ok: true}, 200)
+  } catch (e) {
+
+    return c.json({err: e, ok: false}, 500)
   }
 })
 
