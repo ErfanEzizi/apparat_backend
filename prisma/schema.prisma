@@ -1,16 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // Define the User model
@@ -22,22 +16,36 @@ model User {
   role            UserRole      @default(CLIENT)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  clientBookings  Booking[]     @relation("ClientBookings")
-  creatorBookings Booking[]     @relation("CreatorBookings")
+  clientBookings  Job[]     @relation("ClientBookings")
+  creatorBookings Job[]     @relation("CreatorBookings")
 }
 
-// Define the Booking model
-model Booking {
+// Define the Booking model with basic geolocation data
+model Job {
   id              String    @id @default(uuid())
   date            DateTime
-  location        String
-  status          String    @default("pending") // Can be "pending", "accepted", "completed", "cancelled", etc.
+  locationName    String
+  status          String    @default("pending") // "pending", "accepted", "completed", "cancelled", etc.
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   client          User      @relation("ClientBookings", fields: [clientId], references: [id])
   clientId        String
   creator         User      @relation("CreatorBookings", fields: [creatorId], references: [id])
   creatorId       String
+  locations       Location[]
+  // Add geolocation fields for storing coordinates
+  latitude        Float?
+  longitude       Float?
+}
+
+// Optional: Define a Location model if you want to store real-time tracking history
+model Location {
+  id              String      @id @default(uuid())
+  booking         Job     @relation(fields: [jobId], references: [id])
+  jobId       String
+  latitude        Float
+  longitude       Float
+  timestamp       DateTime    @default(now())
 }
 
 // Define the UserRole enum
@@ -45,4 +53,3 @@ enum UserRole {
   CLIENT
   CREATOR
 }
-

@@ -1,5 +1,5 @@
-import { PrismaClient, User } from '@prisma/client'
-import { CreateUserSchema, UpdateUserSchema, UserType } from './types'
+import { PrismaClient } from '@prisma/client'
+import { CreateUserSchema, UpdateUserSchema, type UserType } from './types'
 import { z } from 'zod'
 
 const prisma = new PrismaClient()
@@ -18,7 +18,13 @@ export const get_all_users = async () => {
 
 export const create_user = async (data: z.infer<typeof CreateUserSchema>) => {
   try {
-    const createUser = await prisma.user.create({ data: data })
+    const hashedPassword = await Bun.password.hash(data.password); // Hash password
+    const createUser = await prisma.user.create({
+      data: {
+        ...data,
+        password: hashedPassword,
+      },
+    });
 
     return createUser
   } catch (e) {
@@ -27,6 +33,19 @@ export const create_user = async (data: z.infer<typeof CreateUserSchema>) => {
     throw e
   }
 }
+
+// Find a user by email (for login)
+export const find_user_by_email = async (email: string) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+    return user;
+  } catch (e) {
+    console.error('Error finding user by email:', e);
+    throw new Error('Failed to find user');
+  }
+};
 
 export const delete_user = async (id: UserType['id']) => {
   try {

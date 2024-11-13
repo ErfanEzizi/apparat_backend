@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { FetchEventLike } from 'hono/types'
 
 const home = new Hono()
 
