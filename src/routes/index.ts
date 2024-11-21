@@ -1,9 +1,9 @@
-import posts from "./posts/posts";
-import home from "./home/home";
-import users from './users/users';
+import jobs from './jobs/jobs'
+import home from './home/home'
+import users from './users/users'
 
 export const Routes = {
-  posts,
+  jobs,
   home,
-  users
+  users,
 }
