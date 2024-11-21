@@ -18,11 +18,14 @@ model User {
   updatedAt       DateTime      @updatedAt
   clientBookings  Job[]     @relation("ClientBookings")
   creatorBookings Job[]     @relation("CreatorBookings")
+  jobApplications JobApplication[] @relation("PhotographerApplications")
 }
 
 // Define the Booking model with basic geolocation data
 model Job {
   id              String    @id @default(uuid())
+  title           String    @default("")// Short title for the job
+  description     String    @default("")// Detailed description of the job
   date            DateTime
   locationName    String
   status          String    @default("pending") // "pending", "accepted", "completed", "cancelled", etc.
@@ -30,12 +33,22 @@ model Job {
   updatedAt       DateTime  @updatedAt
   client          User      @relation("ClientBookings", fields: [clientId], references: [id])
   clientId        String
-  creator         User      @relation("CreatorBookings", fields: [creatorId], references: [id])
-  creatorId       String
+  creator         User?     @relation("CreatorBookings", fields: [creatorId], references: [id])
+  creatorId       String?
   locations       Location[]
-  // Add geolocation fields for storing coordinates
-  latitude        Float?
-  longitude       Float?
+  jobApplications JobApplication[] @relation("JobApplications")
+  latitude        Float?    // Geolocation latitude
+  longitude       Float?    // Geolocation longitude
+}
+
+model JobApplication {
+  id              String    @id @default(uuid())
+  job             Job       @relation("JobApplications", fields: [jobId], references: [id])
+  jobId           String
+  photographer    User      @relation("PhotographerApplications", fields: [photographerId], references: [id])
+  photographerId  String
+  status          String    @default("pending") // "pending", "accepted", "rejected"
+  createdAt       DateTime  @default(now())
 }
 
 // Optional: Define a Location model if you want to store real-time tracking history

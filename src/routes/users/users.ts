@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { create_user, delete_user, find_user_by_email, get_all_users, update_user_record } from './service'
+import { changeUserPassword, create_user, delete_user, find_user_by_email, get_all_users, getClientJobsWithApplicants, getUserApplications, update_user_record } from './service'
 import { zValidator } from '@hono/zod-validator'
 import { CreateUserSchema, UpdateUserSchema } from './types'
 import { jwt, sign } from 'hono/jwt';
@@ -66,6 +66,22 @@ users.put('/:id',zValidator('json', UpdateUserSchema, (result, c) => {
   }
 })
 
+users.put("/:id/change-password", async (c) => {
+  const userId = c.req.param("id");
+  const { currentPassword, newPassword } = await c.req.json();
+
+  if (!currentPassword || !newPassword) {
+    return c.json({ error: "Current password and new password are required" }, 400);
+  }
+
+  try {
+    const result = await changeUserPassword(userId, currentPassword, newPassword);
+    return c.json({ message: result.message, ok: true }, 200);
+  } catch (error: any) {
+    return c.json({ error: error.message, ok: false }, 400);
+  }
+});
+
 // User login route to issue a JWT
 users.post('/login', async (c) => {
   const { email, password } = await c.req.json();
@@ -94,6 +110,31 @@ users.post('/login', async (c) => {
     return c.json({ token, ok: true }, 200);
   } catch (e: any) {
     return c.json({ error: e.message, ok: false }, 500);
+  }
+});
+
+// Get all applications for a specific user
+users.get("/:id/applications", authenticate, async (c) => {
+  const userId = c.req.param("id"); // Extract user ID from route parameters
+  if (!userId) {
+    return c.json({ error: "User ID is required" }, 400);
+  }
+  try {
+    const applications = await getUserApplications(userId);
+    return c.json({ applications, ok: true }, 200);
+  } catch (error: any) {
+    return c.json({ error: error.message, ok: false }, 500);
+  }
+});
+
+users.get("/:id/jobs-with-applicants", async (c) => {
+  const clientId = c.req.param("id");
+
+  try {
+    const jobs = await getClientJobsWithApplicants(clientId);
+    return c.json({ jobs, ok: true }, 200);
+  } catch (error: any) {
+    return c.json({ error: error.message, ok: false }, 500);
   }
 });
 

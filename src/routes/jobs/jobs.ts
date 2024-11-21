@@ -6,8 +6,12 @@ import {
   create_job,
   update_job,
   delete_job,
+  apply_to_job,
+  get_job_applications,
+  assign_photographer,
+  updateJobApplicationStatus,
 } from "./service";
-import { CreateJobSchema, UpdateJobSchema } from "./validations";
+import { AssignPhotographerSchema, CreateJobSchema, JobApplicationSchema, UpdateJobSchema } from "./validations";
 
 const jobs = new Hono();
 
@@ -71,6 +75,22 @@ jobs.put(
   }
 );
 
+jobs.put("/:id/application-status", async (c) => {
+  const { id: applicationId } = c.req.param();
+  const { status } = await c.req.json();
+
+  if (!["accepted", "declined"].includes(status)) {
+    return c.json({ error: "Invalid status value" }, 400);
+  }
+
+  try {
+    const updatedApplication = await updateJobApplicationStatus(applicationId, status);
+    return c.json({ application: updatedApplication, ok: true }, 200);
+  } catch (error: any) {
+    return c.json({ error: error.message, ok: false }, 500);
+  }
+});
+
 // Delete a job
 jobs.delete("/:id", async (c) => {
   const { id } = c.req.param();
@@ -82,4 +102,57 @@ jobs.delete("/:id", async (c) => {
   }
 });
 
+// Photographer applies to a job
+jobs.post(
+  "/:id/apply",
+  zValidator("json", JobApplicationSchema, (result, c) => {
+    if (!result.success) {
+      return c.json({ err: result.error.issues, ok: false }, 400);
+    }
+  }),
+  async (c) => {
+    const { id: jobId } = c.req.param();
+    const { photographerId } = c.req.valid("json");
+
+    try {
+      const application = await apply_to_job(jobId, photographerId);
+      return c.json({ application, ok: true }, 201);
+    } catch (e: any) {
+      return c.json({ error: e.message, ok: false }, 400);
+    }
+  }
+);
+
+// Get all applications for a job
+jobs.get("/:id/applications", async (c) => {
+  const { id: jobId } = c.req.param();
+
+  try {
+    const applications = await get_job_applications(jobId);
+    return c.json({ applications, ok: true }, 200);
+  } catch (e: any) {
+    return c.json({ error: e.message, ok: false }, 500);
+  }
+});
+
+// Assign a photographer to a job
+jobs.post(
+  "/:id/assign",
+  zValidator("json", AssignPhotographerSchema, (result, c) => {
+    if (!result.success) {
+      return c.json({ err: result.error.issues, ok: false }, 400);
+    }
+  }),
+  async (c) => {
+    const { id: jobId } = c.req.param();
+    const { photographerId } = c.req.valid("json");
+
+    try {
+      const job = await assign_photographer(jobId, photographerId);
+      return c.json({ job, ok: true }, 200);
+    } catch (e: any) {
+      return c.json({ error: e.message, ok: false }, 400);
+    }
+  }
+);
 export default jobs;

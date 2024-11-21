@@ -20,5 +20,16 @@ export const UpdateJobSchema = z.object({
   longitude: z.number().optional(),
 });
 
+export const JobApplicationSchema = z.object({
+  photographerId: z.string().uuid(), // UUID of the photographer applying
+});
+
+// Schema for assigning a photographer to a job
+export const AssignPhotographerSchema = z.object({
+  photographerId: z.string().uuid(), // UUID of the photographer to be assigned
+});
+
+export type JobApplicationType = z.infer<typeof JobApplicationSchema>;
+export type AssignPhotographerType = z.infer<typeof AssignPhotographerSchema>;
 export type CreateJobType = z.infer<typeof CreateJobSchema>;
 export type UpdateJobType = z.infer<typeof UpdateJobSchema>;
