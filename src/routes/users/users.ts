@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
-import { changeUserPassword, create_user, delete_user, find_user_by_email, get_all_users, getClientJobsWithApplicants, getUserApplications, update_user_record } from './service'
+import { changeUserPassword, create_user, delete_user, find_user_by_email, get_all_users, getClientJobsWithApplicants, getUserApplications, getUserProfile, update_user_record } from './service'
 import { zValidator } from '@hono/zod-validator'
 import { CreateUserSchema, UpdateUserSchema } from './types'
+import { PrismaClient } from '@prisma/client'
 import { jwt, sign } from 'hono/jwt';
 
 const users = new Hono()
@@ -101,7 +102,7 @@ users.post('/login', async (c) => {
     const payload = {
       id: user.id,
       role: user.role,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24
     }
 
     // Generate JWT
@@ -121,6 +122,7 @@ users.get("/:id/applications", authenticate, async (c) => {
   }
   try {
     const applications = await getUserApplications(userId);
+
     return c.json({ applications, ok: true }, 200);
   } catch (error: any) {
     return c.json({ error: error.message, ok: false }, 500);
@@ -133,6 +135,18 @@ users.get("/:id/jobs-with-applicants", async (c) => {
   try {
     const jobs = await getClientJobsWithApplicants(clientId);
     return c.json({ jobs, ok: true }, 200);
+  } catch (error: any) {
+    return c.json({ error: error.message, ok: false }, 500);
+  }
+});
+
+//Get user Profile
+users.get("/:id", async (c) => {
+  const userId = c.req.param("id");
+
+  try {
+    const user = await getUserProfile(userId)
+    return c.json({ user, ok: true }, 200);
   } catch (error: any) {
     return c.json({ error: error.message, ok: false }, 500);
   }

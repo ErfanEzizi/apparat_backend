@@ -89,16 +89,23 @@ export const getUserApplications = async (userId: string) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
-
   return await prisma.jobApplication.findMany({
     where: {
-      id: userId,
-    },
-    include: {
-      job: true, // Include related job details
-    },
+      photographerId: userId,
+    }
   });
 };
+
+export const getUserProfile = async (userId: string) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  return await prisma.user.findUnique({
+    where: { id: userId },
+  });
+}
+
 
 export const getClientJobsWithApplicants = async (clientId: string) => {
   if (!clientId) {

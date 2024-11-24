@@ -6,7 +6,7 @@ export const CreateJobSchema = z.object({
   locationName: z.string().min(1, "Location name is required"),
   status: z.enum(["pending", "accepted", "completed", "cancelled"]).optional(),
   clientId: z.string().uuid(),
-  creatorId: z.string().uuid(),
+  creatorId: z.string().uuid().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
 });

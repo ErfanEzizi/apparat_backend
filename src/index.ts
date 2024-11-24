@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors';
+import { handle } from "hono/vercel";
 import { Routes }  from './routes/index'
 
 const app = new Hono()
@@ -20,4 +21,4 @@ app.route('/users', Routes.users)
 
 console.log(`\n All is well on port ${port}`)
 
-export default app
+export default handle(app)
