@@ -8,7 +8,6 @@ WORKDIR /app
 COPY package.json bun.lockb ./
 COPY prisma ./prisma/
 COPY src ./src
-COPY .env .env
 
 # Install dependencies
 RUN bun install
